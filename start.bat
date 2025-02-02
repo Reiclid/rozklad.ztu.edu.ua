@@ -4,6 +4,11 @@ color 0A
 chcp 65001 >nul
 
 set LOGFILE=start.log
+set PROXY_FILE=proxy.txt
+
+:: Запобігаємо блокуванню файлу логів
+if exist %LOGFILE% del /F /Q %LOGFILE%
+
 echo ============================== >> %LOGFILE%
 echo Запуск: %DATE% %TIME% >> %LOGFILE%
 echo ============================== >> %LOGFILE%
@@ -48,12 +53,26 @@ taskkill /F /IM ngrok.exe /T >nul 2>&1
 
 :: Чистимо старі логи
 if exist ngrok.log del /F /Q ngrok.log
-if exist proxy.txt del /F /Q proxy.txt
+
+:: 🔍 Перевіряємо робочі проксі
+if exist %PROXY_FILE% (
+    echo 🔄 Перевіряю старі проксі...
+    echo "" > temp_proxy.txt
+    for /f "delims=" %%i in (%PROXY_FILE%) do (
+        curl -s -o nul -w "%%i {http_code}" %%i | findstr /C:"200" >nul && echo %%i >> temp_proxy.txt
+    )
+    move /Y temp_proxy.txt %PROXY_FILE% >nul
+    echo ✅ Робочі проксі залишені, неробочі видалені.
+    timeout /t 1 >nul
+) else (
+    echo 🔍 Файл proxy.txt не знайдено, створюю новий...
+    echo "" > %PROXY_FILE%
+)
 
 :: Запускаємо CORS Anywhere
 echo 🔄 Запускаю CORS Anywhere...
 start /min cmd /c "node C:\Users\1206m\AppData\Roaming\npm\node_modules\cors-anywhere\server.js --port 8080 --cors-anywhere.allow-origin '*' --cors-anywhere.require-header '' >> %LOGFILE% 2>&1"
-timeout /t 2 /nobreak >nul
+timeout /t 5 /nobreak >nul
 
 :: Запускаємо ngrok
 echo 🔄 Запускаю ngrok...
@@ -65,8 +84,7 @@ set /a RETRIES=20
 :WaitForNgrokApi
 timeout /t 2 /nobreak >nul
 
-:: Виправлена команда FOR /F, де правильно екранізовані лапки
-for /f "delims=" %%i in ('powershell -noprofile -command "try { (Invoke-WebRequest -Uri \"http://127.0.0.1:4040/api/tunnels\" -UseBasicParsing).Content | ConvertFrom-Json | Select-Object -ExpandProperty tunnels | Where-Object { $_.public_url -match \"^https://.*ngrok-free.app\" } | Select-Object -ExpandProperty public_url } catch { }"') do (
+for /f "delims=" %%i in ('powershell -noprofile -command "try { (Invoke-WebRequest -Uri \"http://127.0.0.1:4040/api/tunnels\" -UseBasicParsing).Content | ConvertFrom-Json | Select-Object -ExpandProperty tunnels | Where-Object { $_.public_url -match \"https://.*ngrok-free.app\" } | Select-Object -ExpandProperty public_url } catch { }"') do (
     set "NGROK_URL=%%i"
 )
 
@@ -82,17 +100,24 @@ if "%NGROK_URL%"=="" (
     exit /b
 )
 
-echo %NGROK_URL% > proxy.txt
-echo ✅ Отримано новий Proxy URL: %NGROK_URL%
-echo ✅ Отримано новий Proxy URL: %NGROK_URL% >> %LOGFILE%
+:: ✅ Додаємо новий проксі в proxy.txt без видалення старих
+(
+    echo %NGROK_URL%
+) >> %PROXY_FILE%
+
+echo ✅ Додано новий Proxy URL: %NGROK_URL%
+echo ✅ Додано новий Proxy URL: %NGROK_URL% >> %LOGFILE%
+timeout /t 1 >nul
 
 :: Оновлення Git-репозиторію
 echo 🔄 Оновлюю Git...
-cd /d C:\Users\1206m\Desktop\YourGitRepo
-git pull --rebase >> %LOGFILE% 2>&1
-git add proxy.txt >> %LOGFILE% 2>&1
-git commit -m "Auto-update proxy URL" >> %LOGFILE% 2>&1
-git push origin main >> %LOGFILE% 2>&1
+git pull --rebase
+timeout /t 1 >nul
+git add %PROXY_FILE%
+timeout /t 1 >nul
+git commit -m "Auto-update proxy URL"
+timeout /t 1 >nul
+git push origin main
 
 echo.
 echo ✅ Все оновлено та запущено!

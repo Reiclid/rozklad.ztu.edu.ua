@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8">
-  <title>Розклад груп (ІПЗ, ВТ, КН)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>Розклад груп (ІПЗ, ВТ, КН)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="face.png">
 </head>
 <body>
   <div class="container">
@@ -35,9 +36,34 @@
   
   <script>
     async function getProxyUrl() {
-        const response = await fetch('proxy.txt');
-        const text = await response.text();
-        return text.trim(); // Видаляємо зайві пробіли та символи нового рядка
+        try {
+            const response = await fetch('proxy.txt');
+            const text = await response.text();
+            const urls = text
+            .split(/\r?\n/)
+            .map(url => url.trim().replace(/^["']|["']$/g, '')) // Видаляємо лапки з початку і кінця
+            .filter(url => url.length > 0); // Фільтруємо порожні рядки
+
+            for (const url of urls) {
+                if (!url) continue; // Ігноруємо пусті рядки
+                console.log(`🔍 Перевіряємо URL: ${url}`);
+                try {
+                    // Використовуємо режим "no-cors", щоб уникнути блокування браузером
+                    const checkResponse = await fetch(url + '/iscorsneeded', { method: 'GET', mode: 'no-cors' });
+
+                    // Якщо fetch не викинув помилку, вважаємо проксі робочим
+                    console.log(`✅ Робочий URL знайдено: ${url}`);
+                    return url.endsWith('/') ? url : url + '/'; // Переконуємося, що є `/` в кінці
+                } catch (err) {
+                    console.warn(`❌ URL не працює: ${url}`, err);
+                }
+            }
+            
+            throw new Error("❌ Немає робочих проксі!");
+        } catch (err) {
+            console.error("❌ Помилка отримання проксі URL:", err);
+            return null;
+        }
     }
 
     let proxyUrl = '';
@@ -45,18 +71,21 @@
     let groupListUrl = '';
 
     getProxyUrl().then(url => {
-        proxyUrl = url + '/';
-        console.log("🟢 Proxy URL завантажено:", proxyUrl);
-        baseUrl = 'https://rozklad.ztu.edu.ua';
-        console.log("🟢 baseList URL завантажено:", baseUrl);
-        groupListUrl = proxyUrl + 'https://rozklad.ztu.edu.ua/schedule/group/list';
-        console.log("🟢 groupList URL завантажено:", groupListUrl);
-        // Використовуємо proxyUrl в інших частинах коду
-        loadGroups();
-
-        if (groupSelect.value) {
-        loadSchedule(); // Тепер розклад завантажиться правильно
-        }   
+        if (url) {
+            proxyUrl = url;
+            console.log("🟢 Використовується Proxy URL завантажено:", proxyUrl);
+            baseUrl = 'https://rozklad.ztu.edu.ua';
+            console.log("🟢 baseList URL завантажено:", baseUrl);
+            groupListUrl = proxyUrl + 'https://rozklad.ztu.edu.ua/schedule/group/list';
+            console.log("🟢 groupList URL завантажено:", groupListUrl);
+            // Використовуємо proxyUrl в інших частинах коду
+            loadGroups();
+            if (groupSelect.value) {
+                loadSchedule();
+            }
+        } else {
+            console.error("🚨 Немає робочого проксі!");
+        }
     });
 
     // Налаштування проксі і базових URL
@@ -165,6 +194,9 @@
 
             localStorage.setItem('cachedGroups', JSON.stringify(groups));
             populateGroupSelect(groups);
+            if (groupSelect.value) {
+                loadSchedule();
+            }
 
         } catch (err) {
             console.error('Помилка завантаження груп:', err);
