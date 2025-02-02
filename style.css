@@ -44,11 +44,22 @@ footer {
     width: 100%;
     max-width: 800px;
     text-align: center;
+    
 }
 
 main {
-    flex-grow: 1;
+    /* flex-grow: 1; */
 }
+
+header {
+    position: sticky;
+    background-color: #0f172a39;
+    backdrop-filter: blur(20px);
+    top: 0;
+    overflow: visible;
+    z-index: 1000;
+}
+
 
 footer {
     text-align: center;
@@ -83,9 +94,13 @@ h2 {
 }
 
 #groupContainer {
+    /* position: sticky; */
+    /* top: 0; */
+    z-index: 1000;
     max-width: 600px;
-    margin: 2rem auto;
+    margin: 0 auto 2rem auto;
     text-align: center;
+    transition: all 0.3s ease;
 }
 
 label {
@@ -114,13 +129,17 @@ select:focus {
 }
 
 #dayMenu {
+    /* position: sticky; */
+    /* top: 60px; */
+    z-index: 1000;
     display: flex;
     justify-content: center;
     gap: 10px;
     list-style: none;
     padding: 0;
-    margin: 2rem 0;
+    margin: 1rem 0;
     flex-wrap: wrap;
+    transition: all 0.3s ease;
 }
 
 #dayMenu li {
@@ -244,6 +263,8 @@ select:focus {
     margin: 0;
     color: var(--text-secondary);
 }
+
+
 
 /* Стиль для WebKit браузерів (Chrome, Edge, Opera, Safari) */
 ::-webkit-scrollbar {
