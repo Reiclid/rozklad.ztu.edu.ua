@@ -1,3 +1,22 @@
-"scripts": {
-  "start": "node server.js"
+{
+  "name": "rozklad.ztu.edu.ua",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "bash start.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Reiclid/rozklad.ztu.edu.ua.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Reiclid/rozklad.ztu.edu.ua/issues"
+  },
+  "homepage": "https://github.com/Reiclid/rozklad.ztu.edu.ua#readme"
 }
