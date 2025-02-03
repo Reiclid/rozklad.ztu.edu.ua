@@ -17,7 +17,7 @@
 
 body {
     margin: 0;
-    padding: 20px;
+    padding: 10px 10px 0px 10px !important;
     font-family: 'Inter', sans-serif;
     background: var(--bg-color);
     color: var(--text-primary);
@@ -90,6 +90,7 @@ footer {
     bottom: 0;
     width: 100%;
     border-radius: 8px 8px 12px 12px;
+    display: none;
 }
 
 a {
