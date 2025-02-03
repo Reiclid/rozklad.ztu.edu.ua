@@ -95,7 +95,7 @@
             console.log("🟢 Використовується Proxy URL завантажено:", proxyUrl);
             baseUrl = 'https://rozklad.ztu.edu.ua';
             console.log("🟢 baseList URL завантажено:", baseUrl);
-            groupListUrl = proxyUrl + 'https://rozklad.ztu.edu.ua/schedule/group/list';
+            groupListUrl = proxyUrl + 'proxy?url=https://rozklad.ztu.edu.ua/schedule/group/list';
             console.log("🟢 groupList URL завантажено:", groupListUrl);
             // Використовуємо proxyUrl в інших частинах коду
             loadGroups();
