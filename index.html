@@ -31,22 +31,30 @@
   <div class="container">
     <h1>Розклад груп</h1>
     <header>
-        <div id="groupContainer">
-            <label for="groupSelect">Оберіть групу:</label>
-            <select id="groupSelect">
-              <option value="">Завантаження груп...</option>
-            </select>
-          </div>
-          
-          <ul id="dayMenu">
-            <!-- Меню для вибору дня буде заповнене скриптом -->
-          </ul>
+        
     </header>
     <main>
         <div id="scheduleContainer">
         <!-- Розклад відобразиться у вигляді карток -->
         </div>
     </main>
+    <nav>
+      <div id="groupContainer">
+          <div id="groupScroll">
+            <!-- Групи будуть додаватися через JavaScript -->
+          </div>
+      </div>
+      
+      <ul id="dayMenu">
+        <li data-full="Понеділок" data-short="Пн"></li>
+        <li data-full="Вівторок" data-short="Вт"></li>
+        <li data-full="Середа" data-short="Ср"></li>
+        <li data-full="Четвер" data-short="Чт"></li>
+        <li data-full="П'ятниця" data-short="Пт"></li>
+        <li data-full="Субота" data-short="Сб"></li>
+        <li data-full="Неділя" data-short="Нд"></li>
+      </ul>
+    </nav>
     <footer>
         <p>by reiclid</p>
     </footer>
@@ -99,9 +107,8 @@
             console.log("🟢 groupList URL завантажено:", groupListUrl);
             // Використовуємо proxyUrl в інших частинах коду
             loadGroups();
-            if (groupSelect.value) {
-                loadSchedule();
-            }
+            populateDayMenu();
+            updateDayNames();
         } else {
             console.error("🚨 Немає робочого проксі!");
         }
@@ -154,10 +161,17 @@
       selectedDayIndex = index;
       localStorage.setItem('selectedDayIndex', index);
       updateDayMenu();
-      if (groupSelect.value) {
-        loadSchedule();
+
+      // Отримуємо збережену групу
+      const selectedGroupUrl = localStorage.getItem("selectedGroup");
+      
+      if (selectedGroupUrl) {
+          console.log(`🔄 Завантажуємо розклад для вибраної групи: ${selectedGroupUrl}`);
+          loadSchedule(selectedGroupUrl);
+      } else {
+          console.warn("❌ Немає вибраної групи для завантаження розкладу!");
       }
-    }
+  }
     
     function updateDayMenu() {
       console.log("📌 Оновлення стилів для вибраного дня");
@@ -166,19 +180,38 @@
       });
     }
     
-    function populateGroupSelect(groups) {
+    function populateGroupScroll(groups) {
       console.log("📌 Заповнюємо список груп", groups);
-      const options = ['<option value="">Оберіть групу</option>']
-        .concat(groups.map(group => `<option value="${group.href}">${group.name}</option>`));
+      const groupScroll = document.getElementById('groupScroll');
+      if (!groupScroll) {
+          console.error("❌ Помилка: контейнер для груп не знайдено!");
+          return;
+      }
 
-      groupSelect.innerHTML = options.join('');
+      groupScroll.innerHTML = groups.map(group => `
+          <div class="group-item" data-href="${group.href}">${group.name}</div>
+      `).join('');
 
+      // Відновлення вибраної групи
       const storedGroup = localStorage.getItem('selectedGroup');
       if (storedGroup) {
-        console.log(`📌 Відновлюємо вибрану групу: ${storedGroup}`);
-        groupSelect.value = storedGroup;
+          document.querySelectorAll('.group-item').forEach(item => {
+              if (item.dataset.href === storedGroup) {
+                  item.classList.add('active');
+              }
+          });
       }
-    }
+
+      // Додаємо події кліку для вибору групи
+      document.querySelectorAll('.group-item').forEach(item => {
+          item.addEventListener('click', () => {
+              document.querySelectorAll('.group-item').forEach(i => i.classList.remove('active'));
+              item.classList.add('active');
+              localStorage.setItem('selectedGroup', item.dataset.href);
+              loadSchedule(item.dataset.href);
+          });
+      });
+  }
     
     async function loadGroups() {
         if (!proxyUrl) {
@@ -211,11 +244,8 @@
                     href: new URL(anchor.getAttribute('href'), baseUrl).toString()
                 }));
 
-            localStorage.setItem('cachedGroups', JSON.stringify(groups));
-            populateGroupSelect(groups);
-            if (groupSelect.value) {
-                loadSchedule();
-            }
+              localStorage.setItem('cachedGroups', JSON.stringify(groups));
+              populateGroupScroll(groups);
 
         } catch (err) {
             console.error('Помилка завантаження груп:', err);
@@ -224,32 +254,33 @@
         }
 
     
-    async function loadSchedule() {
-      if (!groupSelect.value) {
+        async function loadSchedule(selectedGroupUrl) {
+    if (!selectedGroupUrl) {
+        console.warn("❌ Немає вибраної групи для завантаження розкладу!");
         scheduleContainer.innerHTML = '';
         return;
-      }
+    }
 
-      const selectedGroupName = groupSelect.options[groupSelect.selectedIndex].text;
-      const scheduleCacheKey = `cachedSchedule_${groupSelect.value}_${selectedDayIndex}`;
+    const selectedGroupName = document.querySelector(`.group-item[data-href="${selectedGroupUrl}"]`)?.textContent || "Обрана група";
+    const scheduleCacheKey = `cachedSchedule_${selectedGroupUrl}_${selectedDayIndex}`;
 
-      console.log(`📌 Завантажуємо розклад для ${selectedGroupName} (${days[selectedDayIndex]})`);
-      const cachedSchedule = localStorage.getItem(scheduleCacheKey);
-      if (cachedSchedule) {
+    console.log(`📌 Завантажуємо розклад для ${selectedGroupName} (${days[selectedDayIndex]})`);
+    
+    const cachedSchedule = localStorage.getItem(scheduleCacheKey);
+    if (cachedSchedule) {
         console.log("✅ Використовуємо кешований розклад");
         scheduleContainer.innerHTML = cachedSchedule;
         return;
-      }
+    }
 
-      scheduleContainer.innerHTML = showLoader();
+    scheduleContainer.innerHTML = showLoader();
 
-      try {
-        console.log("🔄 Запит розкладу з сервера...", groupSelect.value);
-        const response = await fetch(`${proxyUrl}proxy?url=${encodeURIComponent(groupSelect.value)}`, {
+    try {
+        console.log("🔄 Запит розкладу з сервера...", selectedGroupUrl);
+        const response = await fetch(`${proxyUrl}proxy?url=${encodeURIComponent(selectedGroupUrl)}`, {
             mode: "cors",
             headers: {
                 "ngrok-skip-browser-warning": "true",
-                //"Origin": baseUrl,
                 "X-Requested-With": "XMLHttpRequest"
             }
         });
@@ -287,20 +318,36 @@
         scheduleContainer.innerHTML = scheduleHTML;
         localStorage.setItem(scheduleCacheKey, scheduleHTML);
       } catch (err) {
-        console.error("❌ Помилка завантаження розкладу:", err);
-        scheduleContainer.innerHTML = showError("Помилка завантаження розкладу");
+          console.error("❌ Помилка завантаження розкладу:", err);
+          scheduleContainer.innerHTML = showError("Помилка завантаження розкладу");
       }
-    }
+  }
+
     
     // Ініціалізація
     populateDayMenu();
     loadGroups();
     
     // Події
-    groupSelect.addEventListener('change', () => {
-      localStorage.setItem('selectedGroup', groupSelect.value);
-      loadSchedule();
-    });
+    // groupSelect.addEventListener('change', () => {
+    //   localStorage.setItem('selectedGroup', groupSelect.value);
+    //   loadSchedule();
+    // });
+
+    document.addEventListener("click", (event) => {
+      const selectedGroup = event.target.closest(".group-item");
+      if (!selectedGroup) return;
+
+      document.querySelectorAll(".group-item").forEach(item => item.classList.remove("active"));
+      selectedGroup.classList.add("active");
+
+      const selectedGroupUrl = selectedGroup.dataset.href;
+      localStorage.setItem("selectedGroup", selectedGroupUrl); // ✅ ЗБЕРІГАЄМО групу
+      console.log("🔄 Завантажуємо розклад для групи:", selectedGroupUrl);
+
+      // Завантажуємо розклад для вибраної групи
+      loadSchedule(selectedGroupUrl);
+  });
 
 
     function updateCardEffects() {
@@ -341,7 +388,20 @@
     window.addEventListener('scroll', updateCardEffects);
     window.addEventListener('resize', updateCardEffects);
     document.addEventListener('DOMContentLoaded', updateCardEffects);
-    
+
+    function updateDayNames() {
+        const isMobile = window.innerWidth < 768;
+        document.querySelectorAll("#dayMenu li").forEach((li, index) => {
+            const fullNames = ["Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця", "Субота", "Неділя"];
+            const shortNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
+            
+            li.textContent = isMobile ? shortNames[index] : fullNames[index];
+        });
+    }
+
+
+    window.addEventListener("DOMContentLoaded", updateDayNames);
+    window.addEventListener("resize", updateDayNames);  
 
   </script>
 </body>
