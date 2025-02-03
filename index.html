@@ -1,50 +1,52 @@
 <!DOCTYPE html>
 <html lang="uk">
+
 <head>
-    <meta charset="UTF-8">
-    <title>Розклад груп (ІПЗ, ВТ, КН)</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" type="image/png" href="face.png">
+  <meta charset="UTF-8">
+  <title>Розклад груп (ІПЗ, ВТ, КН)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/png" href="face.png">
 
-    <!-- Open Graph (OG) теги для соцмереж -->
-    <meta property="og:url" content="https://reiclid.github.io/rozklad.ztu.edu.ua/">
-    <meta property="og:type" content="website"/>
-    <meta property="og:image" content="https://i.imgur.com/YbjxjPD.png">
-    <meta property="og:image:type" content="image/png">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:site_name" content="Розклад-груп">
-    <meta property="og:title" content="Розклад груп (ІПЗ, ВТ, КН)">
-    <meta property="og:description" content="Оберіть свою групу та перегляньте актуальний розклад занять!">
-    
+  <!-- Open Graph (OG) теги для соцмереж -->
+  <meta property="og:url" content="https://reiclid.github.io/rozklad.ztu.edu.ua/">
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://i.imgur.com/YbjxjPD.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="Розклад-груп">
+  <meta property="og:title" content="Розклад груп (ІПЗ, ВТ, КН)">
+  <meta property="og:description" content="Оберіть свою групу та перегляньте актуальний розклад занять!">
 
-    <!-- Twitter Card (для Twitter/X) -->
-    <!-- <meta name="twitter:card" content="summary_large_image">
+
+  <!-- Twitter Card (для Twitter/X) -->
+  <!-- <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Розклад груп (ІПЗ, ВТ, КН)">
     <meta name="twitter:description" content="Оберіть свою групу та перегляньте актуальний розклад занять!">
     <meta name="twitter:image" content="https://i.imgur.com/YbjxjPD.png">
     <meta name="twitter:url" content="https://reiclid.github.io/rozklad.ztu.edu.ua/"> -->
 </head>
+
 <body>
   <div class="container">
     <h1>Розклад груп</h1>
     <header>
-        
+
     </header>
     <main>
-        <div id="scheduleContainer">
+      <div id="scheduleContainer">
         <!-- Розклад відобразиться у вигляді карток -->
-        </div>
+      </div>
     </main>
     <nav>
       <div id="groupContainer">
-          <div id="groupScroll">
-            <!-- Групи будуть додаватися через JavaScript -->
-          </div>
+        <div id="groupScroll">
+          <!-- Групи будуть додаватися через JavaScript -->
+        </div>
       </div>
-      
+
       <ul id="dayMenu">
         <li data-full="Понеділок" data-short="Пн"></li>
         <li data-full="Вівторок" data-short="Вт"></li>
@@ -56,41 +58,41 @@
       </ul>
     </nav>
     <footer>
-        <p>by reiclid</p>
+      <p>by reiclid</p>
     </footer>
-    
+
   </div>
-  
+
   <script>
     async function getProxyUrl() {
-        try {
-            const response = await fetch('proxy.txt');
-            const text = await response.text();
-            const urls = text
-            .split(/\r?\n/)
-            .map(url => url.trim().replace(/^["']|["']$/g, '')) // Видаляємо лапки з початку і кінця
-            .filter(url => url.length > 0); // Фільтруємо порожні рядки
+      try {
+        const response = await fetch('proxy.txt');
+        const text = await response.text();
+        const urls = text
+          .split(/\r?\n/)
+          .map(url => url.trim().replace(/^["']|["']$/g, '')) // Видаляємо лапки з початку і кінця
+          .filter(url => url.length > 0); // Фільтруємо порожні рядки
 
-            for (const url of urls) {
-                if (!url) continue; // Ігноруємо пусті рядки
-                console.log(`🔍 Перевіряємо URL: ${url}`);
-                try {
-                    // Використовуємо режим "no-cors", щоб уникнути блокування браузером
-                    const checkResponse = await fetch(url + '/iscorsneeded', { method: 'GET', mode: 'no-cors' });
+        for (const url of urls) {
+          if (!url) continue; // Ігноруємо пусті рядки
+          console.log(`🔍 Перевіряємо URL: ${url}`);
+          try {
+            // Використовуємо режим "no-cors", щоб уникнути блокування браузером
+            const checkResponse = await fetch(url + '/iscorsneeded', { method: 'GET', mode: 'no-cors' });
 
-                    // Якщо fetch не викинув помилку, вважаємо проксі робочим
-                    console.log(`✅ Робочий URL знайдено: ${url}`);
-                    return url.endsWith('/') ? url : url + '/'; // Переконуємося, що є `/` в кінці
-                } catch (err) {
-                    console.warn(`❌ URL не працює: ${url}`, err);
-                }
-            }
-            
-            throw new Error("❌ Немає робочих проксі!");
-        } catch (err) {
-            console.error("❌ Помилка отримання проксі URL:", err);
-            return null;
+            // Якщо fetch не викинув помилку, вважаємо проксі робочим
+            console.log(`✅ Робочий URL знайдено: ${url}`);
+            return url.endsWith('/') ? url : url + '/'; // Переконуємося, що є `/` в кінці
+          } catch (err) {
+            console.warn(`❌ URL не працює: ${url}`, err);
+          }
         }
+
+        throw new Error("❌ Немає робочих проксі!");
+      } catch (err) {
+        console.error("❌ Помилка отримання проксі URL:", err);
+        return null;
+      }
     }
 
     let proxyUrl = '';
@@ -98,34 +100,34 @@
     let groupListUrl = '';
 
     getProxyUrl().then(url => {
-        if (url) {
-            proxyUrl = url;
-            console.log("🟢 Використовується Proxy URL завантажено:", proxyUrl);
-            baseUrl = 'https://rozklad.ztu.edu.ua';
-            console.log("🟢 baseList URL завантажено:", baseUrl);
-            groupListUrl = proxyUrl + 'proxy?url=https://rozklad.ztu.edu.ua/schedule/group/list';
-            console.log("🟢 groupList URL завантажено:", groupListUrl);
-            // Використовуємо proxyUrl в інших частинах коду
-            loadGroups().then(() => {
-                const selectedGroupUrl = localStorage.getItem("selectedGroup");
-                if (selectedGroupUrl) {
-                    console.log(`🔄 Завантажуємо розклад для збереженої групи: ${selectedGroupUrl}`);
-                    loadSchedule(selectedGroupUrl);
-                } else {
-                    console.warn("⚠ Немає вибраної групи. Будь ласка, виберіть групу.");
-                }
-            });
-            populateDayMenu();
-            updateDayNames();
-        } else {
-            console.error("🚨 Немає робочого проксі!");
-        }
+      if (url) {
+        proxyUrl = url;
+        console.log("🟢 Використовується Proxy URL завантажено:", proxyUrl);
+        baseUrl = 'https://rozklad.ztu.edu.ua';
+        console.log("🟢 baseList URL завантажено:", baseUrl);
+        groupListUrl = proxyUrl + 'proxy?url=https://rozklad.ztu.edu.ua/schedule/group/list';
+        console.log("🟢 groupList URL завантажено:", groupListUrl);
+        // Використовуємо proxyUrl в інших частинах коду
+        loadGroups().then(() => {
+          const selectedGroupUrl = localStorage.getItem("selectedGroup");
+          if (selectedGroupUrl) {
+            console.log(`🔄 Завантажуємо розклад для збереженої групи: ${selectedGroupUrl}`);
+            loadSchedule(selectedGroupUrl);
+          } else {
+            console.warn("⚠ Немає вибраної групи. Будь ласка, виберіть групу.");
+          }
+        });
+        populateDayMenu();
+        updateDayNames();
+      } else {
+        console.error("🚨 Немає робочого проксі!");
+      }
     });
 
     // Налаштування проксі і базових URL
     //const proxyUrl = 'https://60a1-193-194-126-219.ngrok-free.app/';
-    
-    
+
+
     const groupSelect = document.getElementById('groupSelect');
     const dayMenu = document.getElementById('dayMenu');
     const scheduleContainer = document.getElementById('scheduleContainer');
@@ -133,7 +135,7 @@
     const groupScroll = document.getElementById('groupScroll');
 
 
-    
+
     // Перевірка на перезавантаження сторінки
     const isReload = (() => {
       try {
@@ -142,7 +144,7 @@
         return performance.navigation?.type === performance.navigation.TYPE_RELOAD;
       }
     })();
-    
+
     // Завантаження вибраного дня з localStorage
     let selectedDayIndex = parseInt(localStorage.getItem('selectedDayIndex')) || 0;
 
@@ -165,37 +167,40 @@
           </li>
         `).join('');
     }
-    
+
     function selectDay(index) {
       console.log(`📌 Вибрано день: ${days[index]}`);
       selectedDayIndex = index;
       localStorage.setItem('selectedDayIndex', index);
       updateDayMenu();
 
+      localStorage.removeItem(`cachedSchedule_${localStorage.getItem("selectedGroup")}_${selectedDayIndex}`);
+
+
       // Отримуємо збережену групу
       const selectedGroupUrl = localStorage.getItem("selectedGroup");
-      
+
       if (selectedGroupUrl) {
-          console.log(`🔄 Завантажуємо розклад для вибраної групи: ${selectedGroupUrl}`);
-          loadSchedule(selectedGroupUrl);
+        console.log(`🔄 Завантажуємо розклад для вибраної групи: ${selectedGroupUrl}`);
+        loadSchedule(selectedGroupUrl);
       } else {
-          console.warn("❌ Немає вибраної групи для завантаження розкладу!");
+        console.warn("❌ Немає вибраної групи для завантаження розкладу!");
       }
-  }
-    
+    }
+
     function updateDayMenu() {
       console.log("📌 Оновлення стилів для вибраного дня");
       dayMenu.querySelectorAll('li').forEach(item => {
         item.classList.toggle('active', parseInt(item.dataset.index) === selectedDayIndex);
       });
     }
-    
+
     function populateGroupScroll(groups) {
       console.log("📌 Заповнюємо список груп", groups);
       const groupScroll = document.getElementById('groupScroll');
       if (!groupScroll) {
-          console.error("❌ Помилка: контейнер для груп не знайдено!");
-          return;
+        console.error("❌ Помилка: контейнер для груп не знайдено!");
+        return;
       }
 
       groupScroll.innerHTML = groups.map(group => `
@@ -205,112 +210,112 @@
       // Відновлення вибраної групи
       const storedGroup = localStorage.getItem('selectedGroup');
       if (storedGroup) {
-          document.querySelectorAll('.group-item').forEach(item => {
-              if (item.dataset.href === storedGroup) {
-                  item.classList.add('active');
-              }
-          });
+        document.querySelectorAll('.group-item').forEach(item => {
+          if (item.dataset.href === storedGroup) {
+            item.classList.add('active');
+          }
+        });
       }
 
       // Додаємо події кліку для вибору групи
       document.querySelectorAll('.group-item').forEach(item => {
-          item.addEventListener('click', () => {
-              document.querySelectorAll('.group-item').forEach(i => i.classList.remove('active'));
-              item.classList.add('active');
-              localStorage.setItem('selectedGroup', item.dataset.href);
-              loadSchedule(item.dataset.href);
-          });
+        item.addEventListener('click', () => {
+          document.querySelectorAll('.group-item').forEach(i => i.classList.remove('active'));
+          item.classList.add('active');
+          localStorage.setItem('selectedGroup', item.dataset.href);
+          loadSchedule(item.dataset.href);
+        });
       });
-  }
-    
+    }
+
     async function loadGroups() {
-        if (!proxyUrl) {
-            console.log("⏳ Очікуємо proxyUrl перед завантаженням груп...");
-            setTimeout(loadGroups, 500); // Повтор через 0.5 секунди
-            return;
+      if (!proxyUrl) {
+        console.log("⏳ Очікуємо proxyUrl перед завантаженням груп...");
+        setTimeout(loadGroups, 500); // Повтор через 0.5 секунди
+        return;
+      }
+
+      try {
+        console.log("🔄 Завантажуємо групи з сервера:", groupListUrl);
+
+        const response = await fetch(groupListUrl, {
+          mode: "cors",
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+            "X-Requested-With": "XMLHttpRequest"
+          }
+        });
+
+        if (!response.ok) throw new Error(`❌ Сервер повернув помилку: ${response.status}`);
+
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+
+        const groups = Array.from(doc.querySelectorAll('.courses-list .groups-list a'))
+          .filter(anchor => /^(ІПЗ(?!к)|ВТ(?!к)|КН(?!к))/.test(anchor.textContent.trim()))
+          .map(anchor => ({
+            name: anchor.textContent.trim(),
+            href: new URL(anchor.getAttribute('href'), baseUrl).toString()
+          }));
+
+        localStorage.setItem('cachedGroups', JSON.stringify(groups));
+        populateGroupScroll(groups);
+
+
+        const groupScroll = document.getElementById("groupScroll");
+        const urlHash = decodeURIComponent(window.location.hash.substring(1));
+        if (urlHash) {
+          const parts = urlHash.split("/");
+          if (parts.length === 3) {
+            const savedScroll = parts[2];
+            console.log(`🔄 Встановлюємо скрол з хешу: ${savedScroll}`);
+            groupScroll.scrollLeft = savedScroll || 0;
+          }
+        } else {
+          const savedScroll = localStorage.getItem("groupScrollPosition");
+          if (savedScroll !== null) {
+            console.log(`🔄 Встановлюємо скрол з localStorage: ${savedScroll}`);
+            groupScroll.scrollLeft = savedScroll;
+          }
         }
 
-        try {
-            console.log("🔄 Завантажуємо групи з сервера:", groupListUrl);
-
-            const response = await fetch(groupListUrl, {
-                mode: "cors",
-                headers: {
-                    "ngrok-skip-browser-warning": "true",
-                    "X-Requested-With": "XMLHttpRequest"
-                }
-            });
-
-            if (!response.ok) throw new Error(`❌ Сервер повернув помилку: ${response.status}`);
-
-            const html = await response.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-
-            const groups = Array.from(doc.querySelectorAll('.courses-list .groups-list a'))
-                .filter(anchor => /^(ІПЗ(?!к)|ВТ(?!к)|КН(?!к))/.test(anchor.textContent.trim()))
-                .map(anchor => ({
-                    name: anchor.textContent.trim(),
-                    href: new URL(anchor.getAttribute('href'), baseUrl).toString()
-                }));
-
-              localStorage.setItem('cachedGroups', JSON.stringify(groups));
-              populateGroupScroll(groups);
+      } catch (err) {
+        console.error('Помилка завантаження груп:', err);
+        groupSelect.innerHTML = '<option value="">Помилка завантаження груп</option>';
+      }
+    }
 
 
-              const groupScroll = document.getElementById("groupScroll");
-              const urlHash = decodeURIComponent(window.location.hash.substring(1));
-              if (urlHash) {
-                  const parts = urlHash.split("/");
-                  if (parts.length === 3) {
-                      const savedScroll = parts[2];
-                      console.log(`🔄 Встановлюємо скрол з хешу: ${savedScroll}`);
-                      groupScroll.scrollLeft = savedScroll || 0;
-                  }
-              } else {
-                  const savedScroll = localStorage.getItem("groupScrollPosition");
-                  if (savedScroll !== null) {
-                      console.log(`🔄 Встановлюємо скрол з localStorage: ${savedScroll}`);
-                      groupScroll.scrollLeft = savedScroll;
-                  }
-              }
-
-        } catch (err) {
-            console.error('Помилка завантаження груп:', err);
-            groupSelect.innerHTML = '<option value="">Помилка завантаження груп</option>';
-        }
-        }
-
-    
-        async function loadSchedule(selectedGroupUrl) {
-    if (!selectedGroupUrl) {
+    async function loadSchedule(selectedGroupUrl) {
+      if (!selectedGroupUrl) {
         console.warn("❌ Немає вибраної групи для завантаження розкладу!");
         scheduleContainer.innerHTML = '';
         return;
-    }
+      }
 
-    const selectedGroupName = document.querySelector(`.group-item[data-href="${selectedGroupUrl}"]`)?.textContent || "Обрана група";
-    const scheduleCacheKey = `cachedSchedule_${selectedGroupUrl}_${selectedDayIndex}`;
+      const selectedGroupName = document.querySelector(`.group-item[data-href="${selectedGroupUrl}"]`)?.textContent || "Обрана група";
+      const scheduleCacheKey = `cachedSchedule_${selectedGroupUrl}_${selectedDayIndex}`;
 
-    console.log(`📌 Завантажуємо розклад для ${selectedGroupName} (${days[selectedDayIndex]})`);
-    
-    const cachedSchedule = localStorage.getItem(scheduleCacheKey);
-    if (cachedSchedule) {
+      console.log(`📌 Завантажуємо розклад для ${selectedGroupName} (${days[selectedDayIndex]})`);
+
+      const cachedSchedule = localStorage.getItem(scheduleCacheKey);
+      if (cachedSchedule) {
         console.log("✅ Використовуємо кешований розклад");
         scheduleContainer.innerHTML = cachedSchedule;
         return;
-    }
+      }
 
-    scheduleContainer.innerHTML = showLoader();
+      scheduleContainer.innerHTML = showLoader();
 
-    try {
+      try {
         console.log("🔄 Запит розкладу з сервера...", selectedGroupUrl);
         const response = await fetch(`${proxyUrl}proxy?url=${encodeURIComponent(selectedGroupUrl)}`, {
-            mode: "cors",
-            headers: {
-                "ngrok-skip-browser-warning": "true",
-                "X-Requested-With": "XMLHttpRequest"
-            }
+          mode: "cors",
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+            "X-Requested-With": "XMLHttpRequest"
+          }
         });
 
         if (!response.ok) throw new Error(`❌ Сервер повернув помилку: ${response.status}`);
@@ -323,8 +328,8 @@
         if (!table) throw new Error('❌ Розклад не знайдено');
 
         const scheduleHTML = `
-          <h2>Розклад для ${selectedGroupName} (${days[selectedDayIndex]})</h2>
-          ${Array.from(table.querySelectorAll('tbody tr'))
+            <h2>Розклад для ${selectedGroupName} (${days[selectedDayIndex]})</h2>
+            ${Array.from(table.querySelectorAll('tbody tr'))
             .map(row => {
               const hourTh = row.querySelector('th.hour-name');
               if (!hourTh) return '';
@@ -334,28 +339,33 @@
               const details = row.querySelectorAll('td')[selectedDayIndex]?.innerHTML.trim() || '<em>Вільно</em>';
 
               return `
-                <div class="schedule-card">
-                  <h3>Пара ${periodNumber} (${timeRange})</h3>
-                  <p>${details}</p>
-                </div>
-              `;
+                  <div class="schedule-card">
+                    <h3>Пара ${periodNumber} (${timeRange})</h3>
+                    <p>${details}</p>
+                  </div>
+                `;
             })
             .join('')}
-        `;
+          `;
 
         scheduleContainer.innerHTML = scheduleHTML;
         localStorage.setItem(scheduleCacheKey, scheduleHTML);
-      } catch (err) {
-          console.error("❌ Помилка завантаження розкладу:", err);
-          scheduleContainer.innerHTML = showError("Помилка завантаження розкладу");
-      }
-  }
 
-    
+        // Array.from(table.querySelectorAll('tbody tr')).forEach((row, i) => {
+        //     const cells = row.querySelectorAll('td');
+        //     console.log(`Рядок ${i}: для дня ${days[selectedDayIndex]} (індекс ${selectedDayIndex}) innerHTML:`, cells[selectedDayIndex]?.innerHTML);
+        // });
+      } catch (err) {
+        console.error("❌ Помилка завантаження розкладу:", err);
+        scheduleContainer.innerHTML = showError("Помилка завантаження розкладу");
+      }
+    }
+
+
     // Ініціалізація
     populateDayMenu();
     loadGroups();
-    
+
     // Події
     // groupSelect.addEventListener('change', () => {
     //   localStorage.setItem('selectedGroup', groupSelect.value);
@@ -375,41 +385,41 @@
 
       // Завантажуємо розклад для вибраної групи
       loadSchedule(selectedGroupUrl);
-  });
+    });
 
 
     function updateCardEffects() {
-        const cards = document.querySelectorAll('.schedule-card');
-        const viewportHeight = window.innerHeight;
+      const cards = document.querySelectorAll('.schedule-card');
+      const viewportHeight = window.innerHeight;
 
-        cards.forEach(card => {
-            const rect = card.getBoundingClientRect();
-            const cardCenter = rect.top + rect.height / 2;
-            const viewportCenter = viewportHeight / 2;
+      cards.forEach(card => {
+        const rect = card.getBoundingClientRect();
+        const cardCenter = rect.top + rect.height / 2;
+        const viewportCenter = viewportHeight / 2;
 
-            // Відстань від центру екрану
-            const distanceFromCenter = cardCenter - viewportCenter;
+        // Відстань від центру екрану
+        const distanceFromCenter = cardCenter - viewportCenter;
 
-            // Нормалізована відстань від центру (-1 = верх, 1 = низ)
-            const normalizedDistance = distanceFromCenter / viewportHeight;
+        // Нормалізована відстань від центру (-1 = верх, 1 = низ)
+        const normalizedDistance = distanceFromCenter / viewportHeight;
 
-            // Визначаємо масштаб (від 1 до 0.8)
-            let scale = 1 - Math.min(Math.abs(normalizedDistance) * 0.2, 0.2);
+        // Визначаємо масштаб (від 1 до 0.8)
+        let scale = 1 - Math.min(Math.abs(normalizedDistance) * 0.2, 0.2);
 
-            // Визначаємо кут нахилу (від -20deg до 20deg)
-            // let tilt = Math.min(Math.max(normalizedDistance * 20, -20), 20);
+        // Визначаємо кут нахилу (від -20deg до 20deg)
+        // let tilt = Math.min(Math.max(normalizedDistance * 20, -20), 20);
 
-            // Додаємо клас для плавної анімації
-            if (Math.abs(normalizedDistance) < 0.5) {
-                card.classList.add('in-view');
-            } else {
-                card.classList.remove('in-view');
-            }
+        // Додаємо клас для плавної анімації
+        if (Math.abs(normalizedDistance) < 0.5) {
+          card.classList.add('in-view');
+        } else {
+          card.classList.remove('in-view');
+        }
 
-            // Застосовуємо стилі
-            card.style.transform = `scale(${scale})`;
-            card.style.opacity = scale * scale;
-        });
+        // Застосовуємо стилі
+        card.style.transform = `scale(${scale})`;
+        card.style.opacity = scale * scale;
+      });
     }
 
     // Викликаємо оновлення при прокручуванні
@@ -418,18 +428,18 @@
     document.addEventListener('DOMContentLoaded', updateCardEffects);
 
     function updateDayNames() {
-        const isMobile = window.innerWidth < 768;
-        document.querySelectorAll("#dayMenu li").forEach((li, index) => {
-            const fullNames = ["Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця", "Субота", "Неділя"];
-            const shortNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
-            
-            li.textContent = isMobile ? shortNames[index] : fullNames[index];
-        });
+      const isMobile = window.innerWidth < 768;
+      document.querySelectorAll("#dayMenu li").forEach((li, index) => {
+        const fullNames = ["Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця", "Субота", "Неділя"];
+        const shortNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
+
+        li.textContent = isMobile ? shortNames[index] : fullNames[index];
+      });
     }
 
 
     window.addEventListener("DOMContentLoaded", updateDayNames);
-    window.addEventListener("resize", updateDayNames);  
+    window.addEventListener("resize", updateDayNames);
 
 
 
@@ -440,62 +450,63 @@
       console.log("📌 DOMContentLoaded: Ініціалізація...");
 
       function updateURLHash() {
-          const selectedGroup = localStorage.getItem("selectedGroup") || "";
-          const selectedDay = localStorage.getItem("selectedDayIndex") || 0;
-          const scrollPosition = groupScroll.scrollLeft || 0;
-          
-          const newHash = `#${encodeURIComponent(selectedGroup)}/${selectedDay}/${scrollPosition}`;
-          history.replaceState(null, null, newHash);
-          console.log(`🔗 URL оновлено: ${newHash}`);
+        const selectedGroup = localStorage.getItem("selectedGroup") || "";
+        const selectedDay = localStorage.getItem("selectedDayIndex") || 0;
+        const scrollPosition = groupScroll.scrollLeft || 0;
+
+        const newHash = `#${encodeURIComponent(selectedGroup)}/${selectedDay}/${scrollPosition}`;
+        history.replaceState(null, null, newHash);
+        console.log(`🔗 URL оновлено: ${newHash}`);
       }
 
       groupScroll.addEventListener("scroll", () => {
-          localStorage.setItem("groupScrollPosition", groupScroll.scrollLeft);
-          console.log(`💾 Збережено скрол: ${groupScroll.scrollLeft}`);
-          updateURLHash();
+        localStorage.setItem("groupScrollPosition", groupScroll.scrollLeft);
+        console.log(`💾 Збережено скрол: ${groupScroll.scrollLeft}`);
+        updateURLHash();
       });
 
       function restoreFromURLHash() {
-          const urlHash = decodeURIComponent(window.location.hash.substring(1));
-          console.log(`🔍 Аналізуємо хеш URL: ${urlHash}`);
+        const urlHash = decodeURIComponent(window.location.hash.substring(1));
+        console.log(`🔍 Аналізуємо хеш URL: ${urlHash}`);
 
-          if (urlHash) {
-              const [savedGroup, savedDay, savedScroll] = urlHash.split("/");
+        if (urlHash) {
+          const [savedGroup, savedDay, savedScroll] = urlHash.split("/");
 
-              console.log(`📝 Розпізнано: Група=${savedGroup}, День=${savedDay}, Скрол=${savedScroll}`);
+          console.log(`📝 Розпізнано: Група=${savedGroup}, День=${savedDay}, Скрол=${savedScroll}`);
 
-              if (savedGroup) {
-                  const groupElement = document.querySelector(`.group-item[data-href="${savedGroup}"]`);
-                  if (groupElement) {
-                      console.log(`✅ Групу знайдено: ${savedGroup}, виділяємо...`);
-                      document.querySelectorAll(".group-item").forEach(item => item.classList.remove("active"));
-                      groupElement.classList.add("active");
+          if (savedGroup) {
+            const groupElement = document.querySelector(`.group-item[data-href="${savedGroup}"]`);
+            if (groupElement) {
+              console.log(`✅ Групу знайдено: ${savedGroup}, виділяємо...`);
+              document.querySelectorAll(".group-item").forEach(item => item.classList.remove("active"));
+              groupElement.classList.add("active");
 
-                      localStorage.setItem("selectedGroup", savedGroup);
-                      loadSchedule(savedGroup);
-                      
-                      setTimeout(() => {
-                          console.log(`🔄 Встановлюємо скрол з хешу: ${savedScroll}`);
-                          groupScroll.scrollLeft = savedScroll || 0;
-                      }, 100);
-                  } else {
-                      console.log(`❌ Групу не знайдено в DOM: ${savedGroup}`);
-                  }
-              }
+              localStorage.setItem("selectedGroup", savedGroup);
+              loadSchedule(savedGroup);
 
-              if (savedDay) {
-                  console.log(`📅 Вибираємо день: ${savedDay}`);
-                  selectDay(parseInt(savedDay));
-              }
-          } else {
-              console.log("⚠ Хеш у URL відсутній.");
+              setTimeout(() => {
+                console.log(`🔄 Встановлюємо скрол з хешу: ${savedScroll}`);
+                groupScroll.scrollLeft = savedScroll || 0;
+              }, 100);
+            } else {
+              console.log(`❌ Групу не знайдено в DOM: ${savedGroup}`);
+            }
           }
+
+          if (savedDay) {
+            console.log(`📅 Вибираємо день: ${savedDay}`);
+            selectDay(parseInt(savedDay));
+          }
+        } else {
+          console.log("⚠ Хеш у URL відсутній.");
+        }
       }
 
       restoreFromURLHash();
-  };
+    };
 
 
   </script>
 </body>
+
 </html>
