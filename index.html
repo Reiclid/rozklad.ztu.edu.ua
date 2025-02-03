@@ -55,6 +55,7 @@
         <li data-full="П'ятниця" data-short="Пт"></li>
         <li data-full="Субота" data-short="Сб"></li>
         <li data-full="Неділя" data-short="Нд"></li>
+        <li data-full="Все" data-short="Все"></li>
       </ul>
     </nav>
     <footer>
@@ -131,7 +132,7 @@
     const groupSelect = document.getElementById('groupSelect');
     const dayMenu = document.getElementById('dayMenu');
     const scheduleContainer = document.getElementById('scheduleContainer');
-    const days = ['Понеділок', 'Вівторок', 'Середа', 'Четвер', "П'ятниця", 'Субота', 'Неділя'];
+    const days = ['Понеділок', 'Вівторок', 'Середа', 'Четвер', "П'ятниця", 'Субота', 'Неділя', 'Все'];
     const groupScroll = document.getElementById('groupScroll');
 
 
@@ -295,12 +296,13 @@
       }
 
       const selectedGroupName = document.querySelector(`.group-item[data-href="${selectedGroupUrl}"]`)?.textContent || "Обрана група";
+      const isAllDays = selectedDayIndex === days.length - 1; // Якщо обрано "Все"
       const scheduleCacheKey = `cachedSchedule_${selectedGroupUrl}_${selectedDayIndex}`;
 
       console.log(`📌 Завантажуємо розклад для ${selectedGroupName} (${days[selectedDayIndex]})`);
 
       const cachedSchedule = localStorage.getItem(scheduleCacheKey);
-      if (cachedSchedule) {
+      if (cachedSchedule && !isAllDays) {
         console.log("✅ Використовуємо кешований розклад");
         scheduleContainer.innerHTML = cachedSchedule;
         return;
@@ -327,26 +329,63 @@
         const table = doc.querySelector('.wrapper table.schedule');
         if (!table) throw new Error('❌ Розклад не знайдено');
 
-        const scheduleHTML = `
-            <h2>Розклад для ${selectedGroupName} (${days[selectedDayIndex]})</h2>
-            ${Array.from(table.querySelectorAll('tbody tr'))
-            .map(row => {
-              const hourTh = row.querySelector('th.hour-name');
-              if (!hourTh) return '';
+        let scheduleHTML = `<h2>Розклад для ${selectedGroupName} (${isAllDays ? "Всі дні" : days[selectedDayIndex]})</h2>`;
 
-              const periodNumber = hourTh.querySelector('.name')?.textContent.trim() || '';
-              const timeRange = hourTh.querySelector('.full-name')?.textContent.trim() || '';
-              const details = row.querySelectorAll('td')[selectedDayIndex]?.innerHTML.trim() || '<em>Вільно</em>';
+        if (isAllDays) {
+            // Виводимо всі дні, але тільки ті пари, які мають заняття
+            days.slice(0, -1).forEach((day, index) => {
+                let daySchedule = Array.from(table.querySelectorAll('tbody tr'))
+                    .map(row => {
+                        const hourTh = row.querySelector('th.hour-name');
+                        if (!hourTh) return '';
 
-              return `
-                  <div class="schedule-card">
-                    <h3>Пара ${periodNumber} (${timeRange})</h3>
-                    <p>${details}</p>
-                  </div>
-                `;
-            })
-            .join('')}
-          `;
+                        const periodNumber = hourTh.querySelector('.name')?.textContent.trim() || '';
+                        const timeRange = hourTh.querySelector('.full-name')?.textContent.trim() || '';
+                        const pairsCell = row.querySelectorAll('td')[index];
+
+                        if (!pairsCell) return ''; // Переконуємося, що комірка існує
+
+                        // Отримуємо вміст та прибираємо зайві пробіли
+                        const details = pairsCell.textContent.trim();
+
+                        // Якщо в парі немає контенту (порожньо або тільки пробіли) — не додаємо
+                        return details && details !== "" ? `
+                            <div class="schedule-card">
+                                <h3>${day} – Пара ${periodNumber} (${timeRange})</h3>
+                                <p>${pairsCell.innerHTML.trim()}</p>
+                            </div>
+                        ` : ''; 
+                    })
+                    .join('');
+
+                if (daySchedule.trim() !== '') {
+                    scheduleHTML += `<h3>${day}</h3>` + daySchedule;
+                }
+            });
+
+        } else {
+            // Якщо вибрано конкретний день, працюємо як раніше
+            scheduleHTML += Array.from(table.querySelectorAll('tbody tr'))
+                .map(row => {
+                    const hourTh = row.querySelector('th.hour-name');
+                    if (!hourTh) return '';
+
+                    const periodNumber = hourTh.querySelector('.name')?.textContent.trim() || '';
+                    const timeRange = hourTh.querySelector('.full-name')?.textContent.trim() || '';
+                    const pairsCell = row.querySelectorAll('td')[selectedDayIndex];
+
+                    // Перевіряємо чи є в парі контент
+                    const details = pairsCell ? pairsCell.innerHTML.trim() : "";
+
+                    return details && details !== "" ? `
+                        <div class="schedule-card">
+                            <h3>Пара ${periodNumber} (${timeRange})</h3>
+                            <p>${details}</p>
+                        </div>
+                    ` : ''; // Якщо контент порожній, просто не додаємо
+                })
+                .join('');
+        }
 
         scheduleContainer.innerHTML = scheduleHTML;
         localStorage.setItem(scheduleCacheKey, scheduleHTML);
@@ -430,8 +469,8 @@
     function updateDayNames() {
       const isMobile = window.innerWidth < 768;
       document.querySelectorAll("#dayMenu li").forEach((li, index) => {
-        const fullNames = ["Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця", "Субота", "Неділя"];
-        const shortNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
+        const fullNames = ["Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця", "Субота", "Неділя", "Все"];
+        const shortNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд", "Все"];
 
         li.textContent = isMobile ? shortNames[index] : fullNames[index];
       });
