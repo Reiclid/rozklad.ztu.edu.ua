@@ -29,11 +29,13 @@ echo "✅ Отриманий URL: $NGROK_URL"
 echo "$NGROK_URL" >> proxy.txt
 
 echo "📤 Оновлюємо Git..."
+git fetch origin
+git checkout -b main origin/main
 
 git config --global user.email "reiclid@gmail.com"
 git config --global user.name "Reiclid"
 
-git pull --rebase
+git pull origin main
 git add proxy.txt
 git commit -m "Auto-update proxy URL"
 git push origin main
