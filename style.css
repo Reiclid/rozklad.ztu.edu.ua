@@ -26,6 +26,7 @@ body {
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
+    overflow: hidden;
 }
 
 .container {
@@ -39,6 +40,7 @@ body {
     padding: 0 20px;
     width: 100%;
     padding-top: 180px;
+    
 }
 
 header,
@@ -78,6 +80,7 @@ nav {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    box-sizing: border-box;
     box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.2); /* Тінь зверху */
 }
 
@@ -218,7 +221,7 @@ select:focus {
     margin: 1rem 0;
     flex-wrap: nowrap;
     overflow-x: auto;
-    scrollbar-width: none; /* Прибираємо скролбар */
+    scrollbar-width: none;
     width: 100%;
 }
 
