@@ -245,7 +245,7 @@
 
       try {
         console.log("🔄 Запит розкладу з сервера...", groupSelect.value);
-        const response = await fetch(proxyUrl + groupSelect.value, {
+        const response = await fetch(`${proxyUrl}proxy?url=${encodeURIComponent(groupSelect.value)}`, {
             mode: "cors",
             headers: {
                 "ngrok-skip-browser-warning": "true",
