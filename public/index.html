@@ -362,10 +362,12 @@
                     scheduleHTML += `<h3>${day}</h3>` + daySchedule;
                 }
             });
+            scheduleContainer.innerHTML = scheduleHTML;
+            localStorage.setItem(scheduleCacheKey, scheduleHTML);
 
         } else {
             // Якщо вибрано конкретний день, працюємо як раніше
-            scheduleHTML += Array.from(table.querySelectorAll('tbody tr'))
+            const scheduleItems = Array.from(table.querySelectorAll('tbody tr'))
                 .map(row => {
                     const hourTh = row.querySelector('th.hour-name');
                     if (!hourTh) return '';
@@ -374,21 +376,28 @@
                     const timeRange = hourTh.querySelector('.full-name')?.textContent.trim() || '';
                     const pairsCell = row.querySelectorAll('td')[selectedDayIndex];
 
-                    // Перевіряємо чи є в парі контент
-                    const details = pairsCell ? pairsCell.innerHTML.trim() : "";
+                    if (!pairsCell) return ''; 
 
-                    return details && details !== "" ? `
+                    // Перевіряємо чи є в парі контент
+                    const details = pairsCell.textContent.trim();
+
+                    if (!details) return '';
+
+                    return `
                         <div class="schedule-card">
-                            <h3>Пара ${periodNumber} (${timeRange})</h3>
-                            <p>${details}</p>
+                            <h3>${days[selectedDayIndex]} – Пара ${periodNumber} (${timeRange})</h3>
+                            <p>${pairsCell.innerHTML.trim()}</p>
                         </div>
-                    ` : ''; // Якщо контент порожній, просто не додаємо
+                    `;
                 })
+                .filter(item => item !== '')
                 .join('');
+
+            scheduleContainer.innerHTML = scheduleItems || showError("Немає пар на цей день");
+            localStorage.setItem(scheduleCacheKey, scheduleItems);
         }
 
-        scheduleContainer.innerHTML = scheduleHTML;
-        localStorage.setItem(scheduleCacheKey, scheduleHTML);
+
 
         // Array.from(table.querySelectorAll('tbody tr')).forEach((row, i) => {
         //     const cells = row.querySelectorAll('td');
