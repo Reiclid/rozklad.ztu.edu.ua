@@ -332,69 +332,78 @@
         let scheduleHTML = `<h2>Розклад для ${selectedGroupName} (${isAllDays ? "Всі дні" : days[selectedDayIndex]})</h2>`;
 
         if (isAllDays) {
-            // Виводимо всі дні, але тільки ті пари, які мають заняття
-            days.slice(0, -1).forEach((day, index) => {
-                let daySchedule = Array.from(table.querySelectorAll('tbody tr'))
-                    .map(row => {
-                        const hourTh = row.querySelector('th.hour-name');
-                        if (!hourTh) return '';
+          // Виводимо всі дні, але тільки ті пари, які мають заняття
+          days.slice(0, -1).forEach((day, index) => {
+            let daySchedule = Array.from(table.querySelectorAll('tbody tr'))
+              .map(row => {
+                const hourTh = row.querySelector('th.hour-name');
+                if (!hourTh) return '';
 
-                        const periodNumber = hourTh.querySelector('.name')?.textContent.trim() || '';
-                        const timeRange = hourTh.querySelector('.full-name')?.textContent.trim() || '';
-                        const pairsCell = row.querySelectorAll('td')[index];
+                const periodNumber = hourTh.querySelector('.name')?.textContent.trim() || '';
+                const timeRange = hourTh.querySelector('.full-name')?.textContent.trim() || '';
+                const pairsCell = row.querySelectorAll('td')[index];
 
-                        if (!pairsCell) return ''; // Переконуємося, що комірка існує
+                if (!pairsCell) return ''; // Переконуємося, що комірка існує
 
-                        // Отримуємо вміст та прибираємо зайві пробіли
-                        const details = pairsCell.textContent.trim();
+                // Отримуємо вміст та прибираємо зайві пробіли
+                const details = pairsCell.textContent.trim();
 
-                        // Якщо в парі немає контенту (порожньо або тільки пробіли) — не додаємо
-                        return details && details !== "" ? `
+                // Якщо в парі немає контенту (порожньо або тільки пробіли) — не додаємо
+                return details && details !== "" ? `
                             <div class="schedule-card">
                                 <h3>${day} – Пара ${periodNumber} (${timeRange})</h3>
                                 <p>${pairsCell.innerHTML.trim()}</p>
                             </div>
-                        ` : ''; 
-                    })
-                    .join('');
+                        ` : '';
+              })
+              .join('');
 
-                if (daySchedule.trim() !== '') {
-                    scheduleHTML += `<h3>${day}</h3>` + daySchedule;
-                }
-            });
-            scheduleContainer.innerHTML = scheduleHTML;
-            localStorage.setItem(scheduleCacheKey, scheduleHTML);
+            if (daySchedule.trim() !== '') {
+              scheduleHTML += `<h3>${day}</h3>` + daySchedule;
+            }
+          });
+          scheduleContainer.innerHTML = scheduleHTML;
+          localStorage.setItem(scheduleCacheKey, scheduleHTML);
 
         } else {
-            // Якщо вибрано конкретний день, працюємо як раніше
-            const scheduleItems = Array.from(table.querySelectorAll('tbody tr'))
-                .map(row => {
-                    const hourTh = row.querySelector('th.hour-name');
-                    if (!hourTh) return '';
+          // Якщо вибрано конкретний день, працюємо як раніше
+          const scheduleItems = Array.from(table.querySelectorAll('tbody tr'))
+            .map(row => {
+              const hourTh = row.querySelector('th.hour-name');
+              if (!hourTh) return '';
 
-                    const periodNumber = hourTh.querySelector('.name')?.textContent.trim() || '';
-                    const timeRange = hourTh.querySelector('.full-name')?.textContent.trim() || '';
-                    const pairsCell = row.querySelectorAll('td')[selectedDayIndex];
+              const periodNumber = hourTh.querySelector('.name')?.textContent.trim() || '';
+              const timeRange = hourTh.querySelector('.full-name')?.textContent.trim() || '';
+              const pairsCell = row.querySelectorAll('td')[selectedDayIndex];
 
-                    if (!pairsCell) return ''; 
+              if (!pairsCell) return '';
 
-                    // Перевіряємо чи є в парі контент
-                    const details = pairsCell.textContent.trim();
+              // Перевіряємо чи є в парі контент
+              const details = pairsCell.textContent.trim();
 
-                    if (!details) return '';
+              if (!details) return '';
 
-                    return `
+              return `
                         <div class="schedule-card">
                             <h3>${days[selectedDayIndex]} – Пара ${periodNumber} (${timeRange})</h3>
                             <p>${pairsCell.innerHTML.trim()}</p>
                         </div>
                     `;
-                })
-                .filter(item => item !== '')
-                .join('');
+            })
+            .filter(item => item !== '')
+            .join('');
 
-            scheduleContainer.innerHTML = scheduleItems || showError("Немає пар на цей день");
-            localStorage.setItem(scheduleCacheKey, scheduleItems);
+          const scheduleWithHeader = `<h2>Розклад для ${selectedGroupName} (${days[selectedDayIndex]})</h2>`;
+
+          scheduleContainer.innerHTML = scheduleItems
+            ? scheduleWithHeader + scheduleItems
+            : showError("Немає пар на цей день");
+
+          localStorage.setItem(scheduleCacheKey,
+            scheduleItems
+              ? scheduleWithHeader + scheduleItems
+              : showError("Немає пар на цей день")
+          );
         }
 
 
