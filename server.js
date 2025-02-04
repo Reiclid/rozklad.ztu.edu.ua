@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
 const path = require("path");
+const path = require("path");
 const puppeteer = require("puppeteer");
 const bodyParser = require("body-parser");
 
@@ -9,7 +10,7 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 const activeSessions = {}; // Глобальний об'єкт для збереження сесій
-
+const cors = require("cors");
 // Використовуємо CORS
 app.use(cors());
 app.use(bodyParser.json());
@@ -17,7 +18,28 @@ app.use(bodyParser.json());
 // Налаштовуємо статичну роздачу файлів з папки "public"
 app.use(express.static(path.join(__dirname, "public")));
 
+// Функція перевірки та встановлення Puppeteer
+async function setupPuppeteer() {
+    console.log("🚀 Перевіряємо Chrome...");
+    try {
+        await puppeteer.launch();
+        console.log("✅ Puppeteer готовий до роботи!");
+    } catch (error) {
+        console.error("❌ Помилка Puppeteer! Встановлюємо Chrome...");
+        const { execSync } = require("child_process");
+        execSync("npx puppeteer browsers install chrome", { stdio: "inherit" });
+    }
+}
 
+// Функція запуску сервера
+function startServer() {
+    app.listen(PORT, () => {
+        console.log(`🚀 Сервер запущено на порту ${PORT}`);
+    });
+}
+
+// Запускаємо Puppeteer, потім сервер
+setupPuppeteer().then(startServer);
 
 // Проксі-маршрут для перенаправлення запитів
 app.get("/proxy", async (req, res) => {
@@ -165,8 +187,4 @@ app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Запускаємо сервер
-app.listen(PORT, () => {
-    console.log(`🚀 Сервер запущено на порту ${PORT}`);
-});
 
