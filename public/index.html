@@ -47,7 +47,7 @@
     </form>
     <h1>Розклад груп</h1>
     <header>
-
+      <p></p>
     </header>
     <main>
       <div id="scheduleContainer">
@@ -256,7 +256,7 @@
       }
 
       console.log("📡 Відправляємо запит...");
-      fetch("http://127.0.0.1:8080/api/login", {
+      fetch(`${proxyUrl}api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password })
