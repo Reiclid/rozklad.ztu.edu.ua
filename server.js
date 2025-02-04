@@ -9,7 +9,6 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 const activeSessions = {}; // Глобальний об'єкт для збереження сесій
-const cors = require("cors");
 // Використовуємо CORS
 app.use(cors());
 app.use(bodyParser.json());
