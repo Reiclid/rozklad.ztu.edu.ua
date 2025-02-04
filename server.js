@@ -4,6 +4,7 @@ const axios = require("axios");
 const path = require("path");
 const puppeteer = require("puppeteer");
 const bodyParser = require("body-parser");
+const { execSync } = require("child_process");
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -16,6 +17,16 @@ app.use(bodyParser.json());
 // Налаштовуємо статичну роздачу файлів з папки "public"
 app.use(express.static(path.join(__dirname, "public")));
 
+// Встановлюємо Chrome вручну
+try {
+    console.log("🛠️ Встановлюємо Chrome...");
+    execSync("npx puppeteer browsers install chrome", { stdio: "inherit" });
+    console.log("✅ Chrome встановлено!");
+} catch (error) {
+    console.error("❌ Помилка встановлення Chrome:", error);
+    process.exit(1);
+}
+
 // Функція перевірки та встановлення Puppeteer
 async function setupPuppeteer() {
     console.log("🚀 Перевіряємо Chrome...");
@@ -26,6 +37,23 @@ async function setupPuppeteer() {
         console.error("❌ Помилка Puppeteer! Встановлюємо Chrome...");
         const { execSync } = require("child_process");
         execSync("npx puppeteer browsers install chrome", { stdio: "inherit" });
+    }
+}
+
+async function launchBrowser() {
+    console.log("🚀 Запускаємо Puppeteer...");
+
+    try {
+        const browser = await puppeteer.launch({
+            headless: true,
+            args: ["--no-sandbox", "--disable-setuid-sandbox"],
+            executablePath: "/app/.cache/puppeteer/chrome/linux-132.0.6834.110/chrome-linux64/chrome", // ✅ Шлях до Chrome
+        });
+
+        return browser;
+    } catch (error) {
+        console.error("❌ Помилка запуску Puppeteer:", error);
+        process.exit(1); // Вийти з процесу у разі невдачі
     }
 }
 
