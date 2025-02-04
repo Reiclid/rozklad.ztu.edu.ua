@@ -217,7 +217,7 @@
 
       console.log("🔄 Автоматичний вхід...");
       try {
-        const response = await fetch("http://127.0.0.1:8080/api/auto-login", {
+        const response = await fetch(`${proxyUrl}/api/auto-login`, {
           method: "POST",
           headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }
         });
@@ -256,7 +256,7 @@
       }
 
       console.log("📡 Відправляємо запит...");
-      fetch("http://127.0.0.1:8080/api/login", {
+      fetch(`${proxyUrl}api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password })
