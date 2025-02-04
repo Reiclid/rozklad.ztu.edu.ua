@@ -35,20 +35,140 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 0 20px;
     width: 100%;
     padding-top: 180px;
-    
+    z-index: 1;
 }
+
+/* Кнопка відкриття логіну */
+.OpenLoginBtn {
+    position: fixed;
+    top: 15px;
+    right: 20px;
+    z-index: 1001;
+    width: 50px;
+    height: 50px;
+    background-color: #1e293b;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.OpenLoginBtn:hover {
+    background-color: #334155;
+    transform: scale(1.1);
+}
+
+.CleanBtn {
+    position: fixed;
+    top: 15px;
+    left: 20px;
+    z-index: 1001;
+    width: 50px;
+    height: 50px;
+    background-color: #1e293b;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Форма логіну */
+.LoginForm {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1001;
+    background-color: #1e293b;
+    width: 320px;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    display: none; /* Прихована за замовчуванням */
+}
+
+/* Текстове поле */
+.LoginForm input[type="text"],
+.LoginForm input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #64748b;
+    border-radius: 6px;
+    background-color: #334155;
+    color: white;
+    font-size: 16px;
+    outline: none;
+    transition: border 0.2s;
+}
+
+.LoginForm input[type="text"]:focus,
+.LoginForm input[type="password"]:focus {
+    border-color: #facc15;
+}
+
+/* Кнопка входу */
+.LoginForm input[type="button"] {
+    width: 100%;
+    padding: 12px;
+    margin-top: 15px;
+    border: none;
+    border-radius: 6px;
+    background-color: #facc15;
+    color: #1e293b;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.LoginForm input[type="button"]:hover {
+    background-color: #fbbf24;
+    transform: scale(1.05);
+}
+
+/* Анімація відкриття форми */
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -55%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
 
 header,
 main,
 nav,
 footer {
     width: 100%;
-    max-width: 900px;
     text-align: center;
     
 }
@@ -118,12 +238,110 @@ h2 {
     font-weight: 500;
 }
 
+.clearDivalert {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5); /* Затемнення */
+    display: none;
+    flex-direction: column;
+    /* opacity: 0.5; */
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.clearDivalert .clearbtns {
+    display: flex;
+    
+}
+
+.cleartext {
+    width: 240px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.cleartext p {
+    margin: 0; /* Прибираємо стандартні відступи параграфа */
+}
+
+.clearBtnNO {
+    background-color: #ff2b8e;
+    font-size: 32px;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 15px;
+    margin: 10px 10px 10px 25px;
+}
+
+.clearBtnYES {
+    background-color: #2bffd1;
+    font-size: 32px;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 15px;
+    margin: 10px 25px 10px 10px;
+}
+
+.loaderDiv {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5); /* Затемнення */
+    display: flex;
+    flex-direction: column;
+    /* opacity: 0.5; */
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.loaderDiv .loadersitetext {
+    margin-top: 15px;
+    background-color: #121213;
+    border-radius: 5px;
+    padding: 5px 15px;
+}
+
+/* .loaderDiv.active {
+    visibility: visible;
+    opacity: 1;
+} */
+
+.alarm {
+    color: #ef4444;
+    /* text-shadow: 10px 10px 10px 10px #ef4444; */
+}
+
+.loadersite {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #fff;
+    border-top: 5px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+
 #groupContainer {
     position: relative;
     width: 100%;
     overflow-x: auto; /* Горизонтальний скрол */
     white-space: nowrap;
-    padding: 10px 0;
+    padding: 10px 0 0px 0;
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -219,8 +437,8 @@ select:focus {
     list-style: none;
     padding: 0;
     margin: 1rem 0;
-    flex-wrap: nowrap;
-    overflow-x: auto;
+    flex-wrap: wrap;
+    /* overflow-x: auto; */
     scrollbar-width: none;
     width: 100%;
 }
@@ -241,6 +459,7 @@ select:focus {
     cursor: pointer;
     transition: var(--transition);
     font-weight: 500;
+    text-wrap: nowrap;
 }
 
 #dayMenu li.active {
@@ -412,7 +631,7 @@ html {
 
     nav {
         position: sticky;
-        padding: 15px 0;
+        padding: 0px 0 15px 0;
         bottom: 0;
     }
 
@@ -427,7 +646,7 @@ html {
     #dayMenu li {
         padding: 6px 10px;
         font-size: 0.8rem;
-        min-width: 40px;
+        min-width: 80px;
         position: relative;
     }
 
