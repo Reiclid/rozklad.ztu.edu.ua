@@ -27,19 +27,6 @@ try {
     process.exit(1);
 }
 
-// Функція перевірки та встановлення Puppeteer
-async function setupPuppeteer() {
-    console.log("🚀 Перевіряємо Chrome...");
-    try {
-        await puppeteer.launch();
-        console.log("✅ Puppeteer готовий до роботи!");
-    } catch (error) {
-        console.error("❌ Помилка Puppeteer! Встановлюємо Chrome...");
-        const { execSync } = require("child_process");
-        execSync("npx puppeteer browsers install chrome", { stdio: "inherit" });
-    }
-}
-
 async function launchBrowser() {
     console.log("🚀 Запускаємо Puppeteer...");
 
@@ -153,7 +140,7 @@ app.post("/api/auto-login", async (req, res) => {
     try {
         console.log(`📌 Використовуємо cookies для отримання розкладу...`);
 
-        const browser = await puppeteer.launch({ headless: true });
+        const browser = await launchBrowser();
         const page = await browser.newPage();
 
         // Встановлюємо cookies
