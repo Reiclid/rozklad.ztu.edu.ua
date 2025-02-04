@@ -2,7 +2,6 @@ const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
 const path = require("path");
-const path = require("path");
 const puppeteer = require("puppeteer");
 const bodyParser = require("body-parser");
 
