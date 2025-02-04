@@ -17,6 +17,8 @@ app.use(bodyParser.json());
 // Налаштовуємо статичну роздачу файлів з папки "public"
 app.use(express.static(path.join(__dirname, "public")));
 
+
+
 // Проксі-маршрут для перенаправлення запитів
 app.get("/proxy", async (req, res) => {
     const targetUrl = req.query.url;
@@ -42,7 +44,11 @@ app.post("/api/login", async (req, res) => {
 
     try {
         console.log("🚀 Запускаємо Puppeteer...");
-        const browser = await puppeteer.launch({ headless: true });
+        const browser = await puppeteer.launch({
+            args: ['--no-sandbox', '--disable-setuid-sandbox'],
+            headless: true
+          });
+          
         const page = await browser.newPage();
         await page.setViewport({ width: 1280, height: 800 });
 
