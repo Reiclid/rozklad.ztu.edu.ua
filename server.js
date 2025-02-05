@@ -20,9 +20,12 @@ const corsOptions = {
     origin: [
         "http://localhost:8080",
         "https://rozklad.ztu.edu.ua",
+        "https://rozkladztu.pp.ua",
         "https://cute-milzie-reiclidco-104afda1.koyeb.app"
     ],
-    credentials: true // ✅ Дозволяє кукі між доменами
+    credentials: true,
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE", // ✅ Дозволяє всі методи
+    allowedHeaders: ["Content-Type", "Authorization"] // ✅ Дозволяє певні заголовки
 };
 app.use(cors(corsOptions));
 
@@ -41,8 +44,13 @@ app.use(session({
 
 // 📌 Додаємо логування всіх запитів
 app.use((req, res, next) => {
-    console.log(`🔵 [${req.method}] ${req.url}`);
-    console.log("🔍 Заголовки:", req.headers);
+    res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    if (req.method === "OPTIONS") {
+        return res.sendStatus(200);
+    }
     next();
 });
 
@@ -102,8 +110,6 @@ app.get("/api/login", async (req, res) => {
         // Зберігаємо куки у сесії
         req.session.authCookies = await cookieJar.getCookies("https://cabinet.ztu.edu.ua");
 
-        req.session.authCookies = req.headers.cookie;
-        
         console.log("📡 Збережені сесійні кукі:", req.session.authCookies);
 
         res.json({ success: true, message: "Автентифікація успішна", schedule: response.data });
