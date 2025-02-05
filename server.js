@@ -7,8 +7,16 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 // Використовуємо CORS
+const allowedOrigins = ["http://localhost:8080", "https://cute-milzie-reiclidco-104afda1.koyeb.app"];
+
 app.use(cors({
-    origin: "http://localhost:8080", // Дозволити цей домен
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true); // ✅ Дозволяємо
+        } else {
+            callback(new Error("❌ Доступ заборонено!")); // ❌ Блокуємо
+        }
+    },
     credentials: true // Дозволяємо кукі
 }));
 
