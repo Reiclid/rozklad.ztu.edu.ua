@@ -26,7 +26,7 @@ app.get("/proxy", async (req, res) => {
         const response = await axios.get(targetUrl, {
             headers: {
                 "User-Agent": "Mozilla/5.0",
-                "Cookie": "PHPSESSID=3u4qtcdb9l8k48ujeok0tushjm" // 🔹 Передаємо кукі
+                "Cookie": "PHPSESSID=huy" // 🔹 Передаємо кукі
             },
             withCredentials: true // 🔹 Передаємо credentials
         });
