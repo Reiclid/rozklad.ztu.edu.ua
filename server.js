@@ -7,7 +7,10 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 // Використовуємо CORS
-app.use(cors());
+app.use(cors({
+    origin: "http://localhost:8080", // Дозволити цей домен
+    credentials: true // Дозволяємо кукі
+}));
 
 // Налаштовуємо статичну роздачу файлів з папки "public"
 app.use(express.static(path.join(__dirname, "public")));
@@ -20,9 +23,23 @@ app.get("/proxy", async (req, res) => {
     }
 
     try {
-        const response = await axios.get(targetUrl);
+        const response = await axios.get(targetUrl, {
+            headers: {
+                "User-Agent": "Mozilla/5.0",
+                "Cookie": "PHPSESSID=3u4qtcdb9l8k48ujeok0tushjm" // 🔹 Передаємо кукі
+            },
+            withCredentials: true // 🔹 Передаємо credentials
+        });
+
+        res.set({
+            "Access-Control-Allow-Origin": "http://localhost:8080", // 🔹 Дозволяємо тільки твій сайт
+            "Access-Control-Allow-Credentials": "true", // 🔹 Дозволяємо кукі
+            "Content-Type": response.headers["content-type"]
+        });
+
         res.send(response.data);
     } catch (error) {
+        console.error("❌ Помилка отримання даних:", error.message);
         res.status(500).send("❌ Помилка отримання даних з " + targetUrl);
     }
 });

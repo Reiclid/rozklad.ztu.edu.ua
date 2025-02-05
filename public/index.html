@@ -312,13 +312,18 @@
 
       try {
         console.log("🔄 Запит розкладу з сервера...", selectedGroupUrl);
-        const response = await fetch(`${proxyUrl}proxy?url=${encodeURIComponent(selectedGroupUrl)}`, {
-          mode: "cors",
-          headers: {
-            "ngrok-skip-browser-warning": "true",
-            "X-Requested-With": "XMLHttpRequest"
-          }
-        });
+        const response = await fetch(`http://localhost:8080/proxy?url=${encodeURIComponent(selectedGroupUrl)}`, {
+          method: "GET",
+          credentials: "include",
+          // mode: "cors",
+          // headers: {
+          //   "ngrok-skip-browser-warning": "true",
+          //   "X-Requested-With": "XMLHttpRequest",
+          //   "Cookie": "PHPSESSID=3u4qtcdb9l8k48ujeok0tushjm"
+          // }
+            
+        })
+        
 
         if (!response.ok) throw new Error(`❌ Сервер повернув помилку: ${response.status}`);
 
