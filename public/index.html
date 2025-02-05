@@ -30,7 +30,7 @@
       <div class="cleartext">
         <p>Чи точно ви хочете скинути всі хешовані данні сайту?</p>
       </div>
-      <div  class="clearbtns">
+      <div class="clearbtns">
         <button class="clearBtnYES" onclick="clearLocalStorage()">Так</button>
         <button class="clearBtnNO" onclick="toggleClear()">Ні</button>
       </div>
@@ -209,81 +209,63 @@
     window.addEventListener("resize", updateDayNames);
 
     async function autoLogin() {
-      const token = localStorage.getItem("authToken");
-      if (!token) {
-        console.log("🔒 Токен відсутній, потрібен ручний вхід");
-        return;
-      }
-
-      console.log("🔄 Автоматичний вхід...");
       try {
-        const response = await fetch("http://127.0.0.1:8080/api/auto-login", {
-          method: "POST",
-          headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }
+        console.log("🔄 Виконуємо автологін...");
+
+        const response = await fetch("http://localhost:8080/api/login", {
+          method: "GET",
+          credentials: "include",
+          mode: "cors",
+          headers: {
+            "Accept": "application/json"
+          }
         });
 
         const data = await response.json();
+        console.log("📡 Відповідь від сервера:", data);
+
         if (data.success) {
-          console.log("✅ Автоматичний вхід успішний!");
-          document.querySelector(".LoginForm").style.display = "none";
-          const savedCookies = JSON.parse(localStorage.getItem("authCookies"));
-          if (savedCookies) {
-            window.userCookies = savedCookies;
-          }
+          console.log("✅ Ви залогінені! Отримуємо розклад...");
           parseSchedule(data.schedule);
-          const selectedGroupUrl = localStorage.getItem("selectedGroup");
-          //loadSchedulelogin();
-        } else {
-          console.log("❌ Токен недійсний, видаляємо...");
-          localStorage.removeItem("authToken");
+        } else if (data.redirect) {
+          console.warn("⚠️ Логін не вдався, перекидаємо на:", data.redirect);
+          window.location.href = data.redirect;
         }
       } catch (error) {
-        console.error("❌ Помилка авто-входу:", error);
-        localStorage.removeItem("authToken");
+        console.error("❌ Помилка:", error);
       }
     }
+
 
     document.addEventListener("DOMContentLoaded", autoLogin);
 
     function submitLogin() {
-      showLoaderSite();
-      const username = document.querySelector("input[name='username']").value;
-      const password = document.querySelector("input[name='password']").value;
-
-      if (!username || !password) {
-        alert("❌ Введіть логін і пароль!");
-        return;
-      }
-
-      console.log("📡 Відправляємо запит...");
-      fetch(`${proxyUrl}api/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
+      fetch("http://localhost:8080/api/login", {
+        method: "GET",
+        credentials: "include" // ✅ Дозволяємо передавати куки
       })
-        .then(response => response.json())
+        .then(res => {
+          if (res.status === 401) {
+            console.warn("⚠ Ви НЕ залогінені! Потрібно увійти.");
+            return null;
+          }
+          return res.json();
+        })
         .then(data => {
-          if (data.success) {
-            // alert("✅ Вхід успішний!");
-            hideLoaderSite();
-            document.querySelector(".LoginForm").style.display = "none";
-
-            // Зберігаємо токен у `localStorage`
-            localStorage.setItem("authToken", data.token);
-            localStorage.setItem("authCookies", JSON.stringify(data.cookies));
-
-            // Парсимо HTML-розклад
-            parseSchedule(data.schedule);
-          } else {
-            alert("❌ Помилка входу!");
+          if (data && data.success) {
+            console.log("✅ Ви залогінені! Отримуємо розклад...");
+            parseSchedule(data.schedule)
+            loadSchedulelogin();
+            //document.getElementById("scheduleContainer").innerHTML = data.schedule;
           }
         })
-        .catch(error => console.error("❌ Помилка:", error));
+        .catch(err => console.error("❌ Помилка:", err));
     }
 
     function parseSchedule(html) {
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, "text/html");
+      console.log("🔍 Розпарсений документ:", doc.body.innerHTML); // Виводимо перші 500 символів для перевірки
 
       // Отримуємо назву групи
       const groupName = doc.querySelector("h2")?.textContent.replace("Група ", "").trim() || "Невідома група";
@@ -417,26 +399,20 @@
     }
 
     async function fetchScheduleFromCabinet(week, day) {
-      const token = localStorage.getItem("authToken");
-      if (!token) {
-        console.error("❌ Немає збереженого токена. Спочатку увійдіть у систему.");
-        return null;
-      }
-
       console.log(`📌 Відправляємо запит на сервер для отримання розкладу (Тиждень ${week}, День ${day})`);
 
       try {
-        const response = await fetch("http://127.0.0.1:8080/api/schedule", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-          body: JSON.stringify({ week, day })
+        const response = await fetch(`${proxyUrl}api/schedule?week=${week}&day=${day}`, {
+          method: "GET",
+          credentials: "include",
         });
 
-        const data = await response.json();
-        if (!data.success) throw new Error(data.error);
+        if (!response.ok) {
+          console.error("❌ Помилка отримання розкладу");
+          return;
+        }
+
+        const data = await response.text(); // Оскільки це HTML
 
         console.log("✅ Отримано розклад з сервера");
         // console.log(data.schedule);
@@ -484,7 +460,16 @@
       try {
         console.log(`🔄 Отримуємо розклад для групи (ID: ${groupId})`);
 
-        const response = await fetch(`${proxyUrl}proxy?url=https://rozklad.ztu.edu.ua/schedule/group?id=${groupId}`);
+        const fullUrl = `${proxyUrl}proxy?url=${encodeURIComponent(`https://rozklad.ztu.edu.ua/schedule/group?id=${groupId}`)}`;
+        console.log("🔹 Відправляємо запит на:", fullUrl);
+
+        const response = await fetch(fullUrl, {
+          mode: "cors",
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+            "X-Requested-With": "XMLHttpRequest"
+          }
+        });
         const text = await response.text();
 
         const parser = new DOMParser();
@@ -527,7 +512,17 @@
     }
 
     async function getCurrentWeekFromRozklad(groupId) {
-      const response = await fetch(`${proxyUrl}proxy?url=${encodeURIComponent(`https://rozklad.ztu.edu.ua/schedule/group?id=${groupId}`)}`);
+      const fullUrl = `${proxyUrl}proxy?url=${encodeURIComponent(`https://rozklad.ztu.edu.ua/schedule/group?id=${groupId}`)}`;
+      console.log("🔹 Відправляємо запит на:", fullUrl);
+
+      const response = await fetch(fullUrl, {
+        mode: "cors",
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+          "X-Requested-With": "XMLHttpRequest"
+        }
+      });
+
       const text = await response.text();
 
       const parser = new DOMParser();
@@ -536,6 +531,8 @@
       // Отримуємо поточний тиждень (зазвичай <h2>Тиждень 0</h2>)
       const weekHeader = doc.querySelector(".wrapper h2")?.textContent.trim();
       const weekMatch = weekHeader.match(/\d+/); // Виділяємо число
+      console.log(`Місяць розкладу --- ${weekMatch}`);
+
       return weekMatch ? parseInt(weekMatch[0], 10) : null;
     }
 

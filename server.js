@@ -2,57 +2,52 @@ const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
 const path = require("path");
-const puppeteer = require("puppeteer");
-const bodyParser = require("body-parser");
-const { execSync } = require("child_process");
+const session = require("express-session");
+const cookieParser = require("cookie-parser");
+const tough = require("tough-cookie");
+const { wrapper } = require("axios-cookiejar-support");
+
+const cookieJar = new tough.CookieJar();
+const client = wrapper(axios.create({ jar: cookieJar, withCredentials: true }));
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
 const activeSessions = {}; // Глобальний об'єкт для збереження сесій
-// Використовуємо CORS
-app.use(cors());
-app.use(bodyParser.json());
 
-// Налаштовуємо статичну роздачу файлів з папки "public"
-app.use(express.static(path.join(__dirname, "public")));
+// 🔹 Список дозволених доменів
+const corsOptions = {
+    origin: [
+        "http://localhost:8080",
+        "https://rozklad.ztu.edu.ua",
+        "https://cute-milzie-reiclidco-104afda1.koyeb.app"
+    ],
+    credentials: true // ✅ Дозволяє кукі між доменами
+};
+app.use(cors(corsOptions));
 
-// Встановлюємо Chrome вручну
-try {
-    console.log("🛠️ Встановлюємо Chrome...");
-    execSync("npx puppeteer browsers install chrome", { stdio: "inherit" });
-    console.log("✅ Chrome встановлено!");
-} catch (error) {
-    console.error("❌ Помилка встановлення Chrome:", error);
-    process.exit(1);
-}
-
-async function launchBrowser() {
-    console.log("🚀 Запускаємо Puppeteer...");
-
-    try {
-        const browser = await puppeteer.launch({
-            headless: true,
-            args: ["--no-sandbox", "--disable-setuid-sandbox"],
-            executablePath: "/app/.cache/puppeteer/chrome/linux-132.0.6834.110/chrome-linux64/chrome", // ✅ Шлях до Chrome
-        });
-
-        return browser;
-    } catch (error) {
-        console.error("❌ Помилка запуску Puppeteer:", error);
-        process.exit(1); // Вийти з процесу у разі невдачі
+app.use(express.json());
+app.use(cookieParser());  // 📌 Парсимо куки
+app.use(session({
+    secret: "your-secret-key",
+    resave: false,
+    saveUninitialized: false, // ❌ Не створювати сесію без потреби
+    cookie: {
+        secure: true, // Постав `true`, якщо HTTPS
+        httpOnly: true,
+        sameSite: "lax"
     }
-}
+}));
 
-// Функція запуску сервера
-function startServer() {
-    app.listen(PORT, () => {
-        console.log(`🚀 Сервер запущено на порту ${PORT}`);
-    });
-}
+// 📌 Додаємо логування всіх запитів
+app.use((req, res, next) => {
+    console.log(`🔵 [${req.method}] ${req.url}`);
+    console.log("🔍 Заголовки:", req.headers);
+    next();
+});
 
-// Запускаємо Puppeteer, потім сервер
-setupPuppeteer().then(startServer);
+// Статичні файли
+app.use(express.static(path.join(__dirname, "public")));
 
 // Проксі-маршрут для перенаправлення запитів
 app.get("/proxy", async (req, res) => {
@@ -62,142 +57,153 @@ app.get("/proxy", async (req, res) => {
     }
 
     try {
-        const response = await axios.get(targetUrl);
+        const response = await axios.get(targetUrl, {
+            headers: {
+                "User-Agent": "Mozilla/5.0",
+                "Cookie": "PHPSESSID=huy" // 🔹 Передаємо кукі
+            },
+            withCredentials: true // 🔹 Передаємо credentials
+        });
+
+        res.set({
+            "Access-Control-Allow-Origin": req.headers.origin, // 🔹 Динамічне визначення
+            "Access-Control-Allow-Credentials": "true"
+        });
+
         res.send(response.data);
     } catch (error) {
+        console.error("❌ Помилка отримання даних:", error.message);
         res.status(500).send("❌ Помилка отримання даних з " + targetUrl);
     }
 });
 
-app.post("/api/login", async (req, res) => {
-    const { username, password } = req.body;
-
-    if (!username || !password) {
-        return res.status(400).json({ error: "❌ Введіть логін і пароль" });
-    }
-
-
+// 📌 Проксі-запит з передачею куків
+app.get("/api/login", async (req, res) => {
     try {
-        console.log("🚀 Запускаємо Puppeteer...");
-        const browser = await puppeteer.launch({
-            args: ['--no-sandbox', '--disable-setuid-sandbox'],
-            headless: true
-          });
-          
-        const page = await browser.newPage();
-        await page.setViewport({ width: 1280, height: 800 });
+        console.log("📡 Отримані кукі з браузера:", req.headers.cookie);
 
-        console.log("🔄 Відкриваємо сайт авторизації...");
-        await page.goto("https://cabinet.ztu.edu.ua/site/login", { waitUntil: "networkidle2" });
+        // Виконуємо запит з куками
+        const response = await client.get("https://cabinet.ztu.edu.ua/site/schedule", {
+            headers: {
+                "User-Agent": req.headers["user-agent"],
+                "Cookie": req.headers.cookie,
+                "Referer": "https://cabinet.ztu.edu.ua/"
+            }
+        });
 
-        console.log("📌 Вводимо логін...");
-        await page.type("#loginform-username", username);
-        await page.type("#loginform-password", password);
-
-        console.log("🚀 Натискаємо кнопку входу...");
-        await Promise.all([
-            page.click('button[name="login-button"]'),
-            page.waitForNavigation({ waitUntil: "networkidle2" })
-        ]);
+        // Перевіряємо, чи сервер повернув сторінку логіну
+        if (response.data.includes('<a href="/site/login">Увійти</a>')) {
+            console.warn("⚠️ Користувач не авторизований");
+            return res.status(401).json({ success: false, error: "Авторизуйтесь в кабінеті ЖДУ" });
+        }
 
         console.log("✅ Авторизація успішна!");
+        
+        // Зберігаємо куки у сесії
+        req.session.authCookies = await cookieJar.getCookies("https://cabinet.ztu.edu.ua");
 
-        // Отримуємо cookies після логіну
-        const cookies = await page.cookies();
-        console.log("📌 Збережені cookies:", cookies);
+        req.session.authCookies = req.headers.cookie;
+        
+        console.log("📡 Збережені сесійні кукі:", req.session.authCookies);
 
-        // Генеруємо унікальний токен сесії
-        const sessionToken = Math.random().toString(36).substr(2);
-
-        // Зберігаємо cookies у `activeSessions`
-        activeSessions[sessionToken] = { cookies };
-
-        console.log("📅 Переходимо на розклад...");
-        await page.goto("https://cabinet.ztu.edu.ua/site/schedule", { waitUntil: "networkidle2" });
-
-        console.log("📌 Отримуємо HTML розкладу...");
-        const scheduleHtml = await page.content();
-
-        console.log("✅ Завантажили розклад!");
-        await browser.close();
-
-        // Повертаємо токен сесії + розклад
-        res.json({ success: true, token: sessionToken, schedule: scheduleHtml, cookies });
-
+        res.json({ success: true, message: "Автентифікація успішна", schedule: response.data });
     } catch (error) {
-        console.error("❌ Помилка входу:", error);
-        res.status(500).json({ error: "Не вдалося авторизуватися" });
+        console.error("❌ Помилка при автентифікації:", error.message);
+        res.status(500).json({ error: "Помилка сервера при спробі автентифікації" });
     }
 });
 
 
-app.post("/api/auto-login", async (req, res) => {
-    const token = req.headers.authorization?.replace("Bearer ", "");
-    if (!token || !activeSessions[token]) {
-        return res.status(401).json({ success: false, error: "Токен недійсний або відсутній" });
+
+
+// 📌 Ендпоінт для автологіну
+app.get("/api/auto-login", async (req, res) => {
+    if (!req.headers.cookie) {
+        return res.status(401).json({ success: false, error: "❌ Немає cookies. Авторизуйтеся в браузері!" });
     }
 
     try {
-        console.log(`📌 Використовуємо cookies для отримання розкладу...`);
+        console.log("📡 Перевіряємо автологін...");
 
-        const browser = await launchBrowser();
-        const page = await browser.newPage();
+        const response = await axios.get("https://cabinet.ztu.edu.ua/site/schedule", {
+            headers: {
+                "User-Agent": req.headers["user-agent"],
+                "Cookie": req.headers.cookie,
+                "Referer": "https://cabinet.ztu.edu.ua/"
+            },
+            withCredentials: true
+        });
 
-        // Встановлюємо cookies
-        await page.setCookie(...activeSessions[token].cookies);
+        if (response.data.includes('<a href="/site/login">Увійти</a>')) {
+            console.warn("⚠ Сервер перенаправив на логін. Користувач НЕ авторизований.");
+            return res.status(401).json({ success: false, error: "❌ Автологін не вдався!" });
+        }
 
-        console.log("📅 Завантажуємо розклад...");
-        await page.goto("https://cabinet.ztu.edu.ua/site/schedule", { waitUntil: "networkidle2" });
-        const scheduleHtml = await page.content();
-
-        await browser.close();
-
-        res.json({ success: true, schedule: scheduleHtml });
-
+        if (response.status === 200 && response.data.includes("Розклад")) {
+            console.log("✅ Автологін успішний!");
+            res.json({ success: true, message: "Автологін успішний!", schedule: response.data });
+        } else {
+            console.warn("⚠ Автологін НЕ вдався.");
+            res.status(401).json({ success: false, error: "❌ Автологін не вдався!" });
+        }
     } catch (error) {
-        console.error("❌ Помилка авто-входу:", error);
-        res.status(500).json({ success: false, error: "Помилка авто-входу" });
+        console.error("❌ Помилка автологіну:", error.message);
+        res.status(500).json({ error: "❌ Помилка автологіну" });
     }
 });
 
-app.post("/api/schedule", async (req, res) => {
-    const { week, day } = req.body;
-    const token = req.headers.authorization?.replace("Bearer ", "");
+// 📌 Проксі-ендпоінт для отримання розкладу
+app.get("/api/schedule", async (req, res) => {
+    const { week, day } = req.query;
 
-    if (!token || !activeSessions[token]) {
-        return res.status(401).json({ success: false, error: "Токен недійсний або відсутній" });
+    // 📌 Перевіряємо, чи є збережені кукі
+    const savedCookies = req.session.authCookies;
+    if (!savedCookies) {
+        return res.status(401).json({ error: "❌ Немає збережених кукі. Авторизуйтеся!" });
     }
 
     try {
-        console.log(`📌 Використовуємо cookies для отримання розкладу (Тиждень ${week}, День ${day})`);
+        console.log("📡 Запитуємо розклад...", `week=${week}&day=${day}`);
 
-        const browser = await puppeteer.launch({ headless: true });
-        const page = await browser.newPage();
+        const response = await axios.get(`https://cabinet.ztu.edu.ua/site/schedule?week=${week}&day=${day}`, {
+            headers: {
+                "User-Agent": req.headers["user-agent"],
+                "Cookie": savedCookies, // 🔹 Передаємо збережені кукі
+                "Referer": "https://cabinet.ztu.edu.ua/"
+            },
+            withCredentials: true
+        });
 
-        // Встановлюємо cookies для сесії
-        await page.setCookie(...activeSessions[token].cookies);
+        // 📌 Перевіряємо, чи сервер не пересилає на логін
+        if (response.data.includes('<a href="/site/login">Увійти</a>')) {
+            console.warn("⚠ Сервер перенаправив на логін.");
+            return res.status(401).json({ error: "❌ Ви не залогінені!" });
+        }
 
-        console.log("📅 Завантажуємо розклад...");
-        await page.goto(`https://cabinet.ztu.edu.ua/site/schedule?week=${week}&day=${day}`, { waitUntil: "networkidle2" });
+        res.set({
+            "Access-Control-Allow-Origin": req.headers.origin,
+            "Access-Control-Allow-Credentials": "true"
+        });
 
-        console.log("📌 Отримуємо HTML розкладу...");
-        const scheduleHtml = await page.evaluate(() => document.documentElement.outerHTML);
-
-        await browser.close();
-
-        res.json({ success: true, schedule: scheduleHtml });
-
+        res.send(response.data);
     } catch (error) {
-        console.error("❌ Помилка отримання розкладу:", error);
-        res.status(500).json({ success: false, error: "Помилка отримання розкладу" });
+        console.error("❌ Помилка отримання розкладу:", error.message);
+        res.status(500).json({ error: "❌ Не вдалося отримати розклад" });
     }
 });
 
 
 
-// Віддаємо index.html за замовчуванням при відкритті кореневого маршруту
+
+
+
+// 📌 Віддаємо `index.html`
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+// 📌 Запускаємо сервер
+app.listen(PORT, () => {
+    console.log(`🚀 Сервер працює на порту ${PORT}`);
+});
 
