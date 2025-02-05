@@ -212,7 +212,7 @@
       try {
         console.log("🔄 Виконуємо автологін...");
 
-        const response = await fetch("http://localhost:8080/api/login", {
+        const response = await fetch(`${proxyUrl}api/login`, {
           method: "GET",
           credentials: "include",
           mode: "cors",
