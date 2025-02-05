@@ -312,7 +312,7 @@
 
       try {
         console.log("🔄 Запит розкладу з сервера...", selectedGroupUrl);
-        const response = await fetch(`http://localhost:8080/proxy?url=${encodeURIComponent(selectedGroupUrl)}`, {
+        const response = await fetch(`${proxyUrl}proxy?url=${encodeURIComponent(selectedGroupUrl)}`, {
           method: "GET",
           credentials: "include",
           // mode: "cors",
