@@ -7,7 +7,11 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 // Використовуємо CORS
-const allowedOrigins = ["http://localhost:8080", "https://cute-milzie-reiclidco-104afda1.koyeb.app"];
+const allowedOrigins = [
+    "http://localhost:8080",
+    "https://rozkladztu.pp.ua", // 🔹 Додаємо твій домен
+    "https://cute-milzie-reiclidco-104afda1.koyeb.app"
+];
 
 app.use(cors({
     origin: (origin, callback) => {
@@ -19,7 +23,7 @@ app.use(cors({
     },
     credentials: true // Дозволяємо кукі
 }));
-
+app.options("*", cors());
 // Налаштовуємо статичну роздачу файлів з папки "public"
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -40,9 +44,8 @@ app.get("/proxy", async (req, res) => {
         });
 
         res.set({
-            "Access-Control-Allow-Origin": "http://localhost:8080", // 🔹 Дозволяємо тільки твій сайт
-            "Access-Control-Allow-Credentials": "true", // 🔹 Дозволяємо кукі
-            "Content-Type": response.headers["content-type"]
+            "Access-Control-Allow-Origin": req.headers.origin, // 🔹 Динамічне визначення
+            "Access-Control-Allow-Credentials": "true"
         });
 
         res.send(response.data);
